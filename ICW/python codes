@@ -1,0 +1,123 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+
+def random_sum(x):
+  y = 0
+  for i in range(300):
+    phi = 2*np.pi*random.uniform(0,1)
+    y += random.uniform(0,1)*np.sin(2*np.pi*i*x+phi)
+  return y
+def two_peaks(x):
+  y = np.cos(2*np.pi*x+np.pi*random.uniform(0,1)) + 0.5*np.cos(2*np.pi*x*10-np.pi*random.uniform(0,1))+0.25*np.cos(2*np.pi*x*20-np.pi*random.uniform(0,1))
+  return y
+def noise(x):
+  y = np.cos(2*np.pi*15+np.pi*random.uniform(0,1)) + np.cos(2*np.pi*x*25-np.pi*random.uniform(0,1))+np.cos(2*np.pi*x*35-np.pi*random.uniform(0,1))
+  return y
+fig, axs = plt.subplots(1,3, figsize=(25, 5))
+axs[0].set_xlabel('Hamming',fontsize=16)
+axs[1].set_xlabel('Blackman',fontsize=16)
+axs[2].set_xlabel('Kaiser, \u03B2 = 3',fontsize=16)
+axs[0].plot(x, window2)
+axs[1].plot(x, window3)
+axs[2].plot(x, windowk_b)
+N = 50
+T = 1.0 / 75
+x = np.linspace(0.0, N*T, N, endpoint=False)
+y = two_peaks(x)
+
+window1 = np.ones(50)
+window2 = np.hamming(50)
+window3 = np.blackman(50)
+max_margin = 0
+windowk_b = 0
+yk_b = 0
+yfk_b = 0
+for beta in range(0,10):
+  windowk = np.kaiser(50, beta)
+  yk = y*windowk
+  yfk = np.abs(np.fft.fft(yk,50))
+  max_mean_margin = np.max(yfk)/np.mean(yfk)
+  if max_mean_margin > max_margin:
+    max_margin = max_mean_margin
+    windowk_b = windowk
+    yk_b = yk
+    yfk_b = yfk
+    print(beta)
+
+y1 = y*window1
+y2 = y*window2
+y3 = y*window3
+
+yf1 = np.fft.fft(y1,50)
+yf2 = np.fft.fft(y2,50)
+yf3 = np.fft.fft(y3,50)
+
+xf = np.fft.fftfreq(N, T)
+fig, axs = plt.subplots(4, 3, figsize=(13, 13))
+axs[0, 0].set_ylabel('Original', fontsize=16)
+axs[1, 0].set_ylabel('Hamming', fontsize=16)
+axs[2, 0].set_ylabel('Blackman', fontsize=16)
+axs[3, 0].set_ylabel('Kaiser', fontsize=16)
+axs[0, 0].set_title('Window function', fontsize=16)
+axs[0, 1].set_title('Windowed signal t-domain', fontsize=16)
+axs[0, 2].set_title('Windowed signal f-domain', fontsize=16)
+axs[0, 0].plot(x, window1)
+axs[0, 1].plot(x, y)
+axs[0, 2].stem(xf, np.abs(yf1))
+axs[1, 0].plot(x, window2)
+axs[1, 1].plot(x, y2)
+axs[1, 2].stem(xf, np.abs(yf2))
+axs[2, 0].plot(x, window3)
+axs[2, 1].plot(x, y3)
+axs[2, 2].stem(xf, np.abs(yf3))
+axs[3, 0].plot(x, windowk_b)
+axs[3, 1].plot(x, yk_b)
+axs[3, 2].stem(xf, yfk_b)
+plt.grid()
+plt.show()
+beta = 3
+
+N = 50
+T = 1.0 / 75
+x = np.linspace(0.0, N*T, N, endpoint=False)
+y = np.sin(2*np.pi*x)*np.exp(-15*x)+np.sin(2*np.pi*x*10)*np.exp(-15*x)
+y += noise(x)/25
+
+window1 = np.kaiser(50, beta)
+window2 = np.zeros(50)
+window2[0:25] = np.kaiser(25, beta)
+window2 += window1 + 2*x/7.5
+
+y1 = y
+y2 = y*window1
+y3 = y*window2
+
+yf1 = np.fft.fft(y1,50)
+yf2 = np.fft.fft(y2,50)
+yf3 = np.fft.fft(y3,50)
+
+xf = np.fft.fftfreq(N, T)
+fig, axs = plt.subplots(3, 3, figsize=(13, 13))
+
+axs[0, 0].set_ylabel('Original', fontsize=16)
+axs[1, 0].set_ylabel('Kaiser', fontsize=16)
+axs[2, 0].set_ylabel('Overlapping Kaiser', fontsize=16)
+axs[0, 0].set_title('Window function', fontsize=16)
+axs[0, 1].set_title('Windowed signal t-domain', fontsize=16)
+axs[0, 2].set_title('Windowed signal f-domain', fontsize=16)
+axs[0, 0].plot(x, np.ones(50))
+axs[0, 1].plot(x, y1)
+axs[0, 2].stem(xf, np.abs(yf1)/np.max(np.abs(yf1)))
+axs[1, 0].plot(x, window1)
+axs[1, 1].plot(x, y2)
+axs[1, 2].stem(xf, np.abs(yf2)/np.max(np.abs(yf2)))
+axs[2, 0].plot(x, window2)
+axs[2, 1].plot(x, y3)
+axs[2, 2].stem(xf, np.abs(yf3)/np.max(np.abs(yf3)))
+N = 50
+T = 1.0 / 75
+x = np.linspace(0.0, N*T, N, endpoint=False)
+y = np.sin(2*np.pi*x*4)*np.exp(-15*x)+np.sin(2*np.pi*x*8)*np.exp(-15*x)
+plt.plot(x, y)
+plt.show()
